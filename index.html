@@ -745,8 +745,10 @@
       background: rgba(255, 255, 255, 0.7);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      /* Stronger border */
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+      /* Stronger shadow */
 
       width: 100%;
       max-width: 100%;
@@ -2164,8 +2166,9 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-radius: var(--radius-lg);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      box-shadow: var(--shadow-glass);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+      /* Deep dark shadow */
     }
 
     #mobileNav .seg {
@@ -2588,6 +2591,24 @@
       display: flex;
       gap: 8px;
       margin-top: 6px;
+    }
+
+    /* Mobile Sheet Buttons Gradient */
+    .sheet-actions #sheetEditBtn,
+    .sheet-actions .save-btn,
+    .sheet-actions #sheetSaveBtn {
+      background: linear-gradient(135deg, var(--primary), var(--accent2));
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3);
+      font-weight: 700;
+      transition: .2s;
+    }
+
+    .sheet-actions #sheetEditBtn:hover,
+    .sheet-actions .save-btn:hover {
+      box-shadow: 0 6px 16px rgba(109, 40, 217, 0.4);
+      transform: translateY(-1px);
     }
 
     .sheet-actions .btn {
