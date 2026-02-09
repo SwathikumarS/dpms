@@ -3159,6 +3159,18 @@
       max-width: var(--preview-w) !important;
     }
 
+    /* Print Toolbar Spacing */
+    .pt-checks {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pt-select-wrap {
+      margin-bottom: 12px;
+    }
+
     /* =========================
    PRINT — VISIBILITY ISOLATION (Blogger-safe)
    ========================= */
@@ -6580,6 +6592,7 @@
       width:100%;
       height:100%;
       object-fit:cover;
+      object-position:center;
       transform-origin:center;
     }
     #scanViewport.force-landscape video{
