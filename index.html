@@ -265,9 +265,32 @@
       <path d="M10 9c0-1.1 1.3-2 2.5-2s2.5.9 2.5 2c0 2-2.5 3.5-5 5h5" fill="none" stroke="currentColor" stroke-width="2"
         stroke-linecap="round" stroke-linejoin="round" />
     </symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24">
+      <polyline points="15 18 9 12 15 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" />
+    </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24">
+      <polyline points="9 18 15 12 9 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" />
+    </symbol>
   </svg>
 
   <style>
+    /* Fix for "Today" + "Selected" overlap visibility */
+    .cal-day.today.selected {
+      color: #fff !important;
+    }
+
+    .cal-day.today:not(.selected) {
+      color: var(--primary);
+    }
+
+    /* Ensure icon color matches text in Date Buttons */
+    #dateBtn .ico,
+    #metricsDateBtn .ico {
+      color: currentColor;
+    }
+
     /* =========================
    REFINED MODERN THEME (V3 Option 2)
    ========================= */
@@ -285,6 +308,38 @@
       /* Violet-700 Use true Royal Purple */
       --primary-600: #5b21b6;
       /* Violet-800 */
+
+      /* FORCE DATE BUTTON BOLD & DEFAULT COLOR */
+      #dateBtn,
+      #metricsDateBtn {
+        font-weight: 700 !important;
+        /* Removed color: var(--primary) to let it inherit grey/ink */
+      }
+
+      #dateBtn .ico,
+      #metricsDateBtn .ico {
+        color: currentColor !important;
+        stroke: currentColor !important;
+      }
+
+      /* FORCE BOLD DATE PICKER ELEMENTS */
+      .rp2-chip {
+        font-weight: 700 !important;
+      }
+
+      .current-month-label {
+        font-weight: 700 !important;
+      }
+
+      .cal-header {
+        font-weight: 700 !important;
+      }
+
+      /* FORCE TODAY SELECTED WHITE TEXT */
+      .cal-day.today.selected {
+        color: #fff !important;
+      }
+
       --accent: #22d3ee;
       --accent2: #7c3aed;
       /* Violet-600 (Darker secondary for subtle gradient) */
@@ -302,8 +357,10 @@
 
       /* Shadows (Refined) */
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07),
+      0 2px 4px -2px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08),
+      0 4px 6px -4px rgba(0, 0, 0, 0.08);
       --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
 
       /* Radius */
@@ -1433,7 +1490,7 @@
     #metricsDateLabel {
       color: #475569;
       /* Semi-black (Slate 600) */
-      font-weight: 500;
+      font-weight: 700;
     }
 
     .metric {
@@ -1477,10 +1534,10 @@
 
     .gauge-wrap {
       position: relative;
-      width: 115px;
-      /* Increased width as requested */
-      height: 65px;
-      /* Increased height */
+      width: 135px;
+      /* Scaled up */
+      height: 75px;
+      /* Requested 75px */
       display: flex;
       justify-content: center;
       margin-top: 4px;
@@ -1594,8 +1651,8 @@
       }
 
       .gauge-wrap {
-        width: 80px;
-        height: 50px;
+        width: 95px;
+        height: 75px;
       }
     }
 
@@ -3202,6 +3259,32 @@
         background: transparent !important;
         border-radius: 0 !important;
       }
+
+      /* Hide any labels/pseudo-elements on the preview container */
+      #previewWrap::before,
+      #previewWrap::after,
+      .preview-card::before,
+      .preview-card::after {
+        display: none !important;
+        content: none !important;
+      }
+    }
+
+    /* Print Toolbar Spacing */
+    .pt-checks {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Ensure no "Preview Label" text leaks if it's a specific element */
+    @media print {
+      .preview-label-text {
+        display: none !important;
+      }
+
+      /* Speculative fix */
     }
 
     #scanViewport video {
@@ -3858,16 +3941,213 @@
         <button class="rp2-chip" data-k="clear">Clear All</button>
       </div>
 
-      <div class="rp-body">
-        <div class="form-group">
-          <input type="date" id="rpStart" placeholder=" ">
-          <label>From</label>
-        </div>
-        <div class="form-group">
-          <input type="date" id="rpEnd" placeholder=" ">
-          <label>To</label>
-        </div>
+      <div class="rp-body" style="padding:0; display:block;">
+        <div id="jsCalendar"></div>
+        <!-- Hidden inputs to store value for existing logic -->
+        <input type="hidden" id="rpStart">
+        <input type="hidden" id="rpEnd">
       </div>
+
+      <style>
+        /* Modern JS Calendar */
+        #jsCalendar {
+          padding: 10px 16px 16px;
+          user-select: none;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          /* Center Calendar */
+          width: 100%;
+        }
+
+        .cal-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 14px;
+          color: var(--ink);
+          font-weight: 700;
+          font-size: 14px;
+          /* Medium Header */
+          width: 100%;
+          max-width: 320px;
+          /* Constrain width */
+          margin: 0 auto;
+          /* Force Center */
+        }
+
+        .cal-nav-btn {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          border: 1px solid var(--border);
+          background: var(--paper);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: var(--ink);
+          transition: .2s;
+          box-shadow: var(--shadow-sm);
+        }
+
+        .cal-nav-btn svg {
+          width: 18px;
+          height: 18px;
+          stroke-width: 2.5;
+        }
+
+        .cal-nav-btn:hover {
+          background: var(--surface);
+          color: var(--primary);
+          border-color: var(--primary);
+        }
+
+        .cal-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          column-gap: 4px;
+          row-gap: 6px;
+          text-align: center;
+          width: 100%;
+          max-width: 320px;
+          /* Constrain width */
+          margin: 0 auto;
+          /* Force Center */
+        }
+
+        .cal-head-day {
+          font-size: 11px;
+          color: var(--muted);
+          font-weight: 600;
+          padding-bottom: 6px;
+        }
+
+        .cal-day {
+          width: 38px;
+          /* Medium Size (down from 44, up from original) */
+          height: 38px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13.5px;
+          font-weight: 600;
+          border-radius: 50%;
+          cursor: pointer;
+          transition: .2s;
+          position: relative;
+          color: var(--ink);
+        }
+
+        .cal-day:hover:not(.empty) {
+          background: var(--surface);
+          color: var(--primary);
+        }
+
+        .cal-day.selected {
+          background: var(--primary);
+          color: #fff;
+          font-weight: 700;
+          box-shadow: 0 4px 10px var(--primary-light);
+        }
+
+        /* Range Connectors */
+        .cal-day.range-start {
+          border-radius: 50% 0 0 50%;
+        }
+
+        .cal-day.range-end {
+          border-radius: 0 50% 50% 0;
+        }
+
+        .cal-day.in-range {
+          background: var(--primary-light-bg);
+          color: var(--primary);
+          border-radius: 0;
+          width: 100%;
+        }
+
+        /* Single day overlap fix */
+        .cal-day.selected.range-start.range-end {
+          border-radius: 50%;
+          width: 38px;
+        }
+
+        .cal-day.today {
+          font-weight: 800;
+          color: var(--primary);
+        }
+
+        .cal-day.empty {
+          cursor: default;
+          pointer-events: none;
+        }
+
+        .current-month-label {
+          cursor: pointer;
+          padding: 4px 12px;
+          border-radius: 20px;
+          transition: .2s;
+        }
+
+        .current-month-label:hover {
+          background: var(--surface);
+          color: var(--primary);
+        }
+
+        /* Year Picker Grid */
+        .cal-year-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          padding: 10px;
+          width: 100%;
+          max-width: 320px;
+          margin: 0 auto;
+          /* Force Center */
+        }
+
+        .cal-year-cell {
+          padding: 14px;
+          text-align: center;
+          border-radius: 12px;
+          border: 1px solid var(--border);
+          font-weight: 600;
+          cursor: pointer;
+          transition: .2s;
+          font-size: 14px;
+        }
+
+        .cal-year-cell:hover {
+          border-color: var(--primary);
+          color: var(--primary);
+          background: var(--surface);
+        }
+
+        .cal-year-cell.current {
+          background: var(--primary);
+          color: #fff;
+          border-color: var(--primary);
+        }
+
+        /* Center Presets & Make Larger */
+        .rp-presets {
+          justify-content: center !important;
+          /* Force Center */
+          gap: 8px;
+          /* Spacing */
+          padding: 12px 16px 4px;
+        }
+
+        .rp2-chip {
+          font-size: 13px !important;
+          /* Larger Font */
+          padding: 8px 14px !important;
+          /* Larger Touch Target */
+          border-radius: 20px !important;
+        }
+      </style>
 
       <div class="rp-actions">
         <button class="btn" id="rpCancel"><svg class="ico">
@@ -6038,40 +6318,200 @@
       const rpEnd = document.getElementById('rpEnd');
       const presets = document.getElementById('rpPresets');
 
+      // Calendar State
+      let calDate = new Date(); // View date
+      let selStart = null;
+      let selEnd = null;
+      let viewMode = 'day'; // 'day' | 'year' | 'month'
+
+      function renderCalendar() {
+        const container = document.getElementById('jsCalendar');
+        if (!container) return;
+
+        const y = calDate.getFullYear();
+        const m = calDate.getMonth();
+        const todayStr = new Date().toISOString().slice(0, 10);
+
+        let html = '';
+
+        if (viewMode === 'day') {
+          // Month Names
+          const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+          const firstDay = new Date(y, m, 1).getDay(); // 0=Sun
+          const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+          html += `
+             <div class="cal-header">
+               <div class="cal-nav-btn" data-action="prev"><svg class="ico" viewBox="0 0 24 24" style="stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round"><polyline points="15 18 9 12 15 6"/></svg></div>
+               <div class="current-month-label" title="Click to change year">${months[m]} ${y}</div>
+               <div class="cal-nav-btn" data-action="next"><svg class="ico" viewBox="0 0 24 24" style="stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg></div>
+             </div>
+             <div class="cal-grid">
+               <div class="cal-head-day">S</div>
+               <div class="cal-head-day">M</div>
+               <div class="cal-head-day">T</div>
+               <div class="cal-head-day">W</div>
+               <div class="cal-head-day">T</div>
+               <div class="cal-head-day">F</div>
+               <div class="cal-head-day">S</div>
+           `;
+
+          // Empty cells
+          for (let i = 0; i < firstDay; i++) {
+            html += `<div class="cal-day empty"></div>`;
+          }
+
+          for (let d = 1; d <= daysInMonth; d++) {
+            const date = new Date(y, m, d);
+            const iso = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+
+            let classes = 'cal-day';
+            if (iso === todayStr) classes += ' today';
+
+            if (selStart && selEnd) {
+              if (iso === selStart && iso === selEnd) classes += ' selected range-start range-end';
+              else if (iso === selStart) classes += ' selected range-start';
+              else if (iso === selEnd) classes += ' selected range-end';
+              else if (iso > selStart && iso < selEnd) classes += ' in-range';
+            } else if (selStart && iso === selStart) {
+              classes += ' selected range-start range-end';
+            }
+
+            html += `<div class="${classes}" data-date="${iso}">${d}</div>`;
+          }
+          html += `</div>`;
+
+        } else if (viewMode === 'year') {
+          // Year Picker
+          const startY = y - 7;
+          const endY = y + 7;
+          html += `
+             <div class="cal-header">
+               <div class="cal-nav-btn" data-action="prev-year"><svg class="ico" viewBox="0 0 24 24" style="stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round"><polyline points="15 18 9 12 15 6"/></svg></div>
+               <div class="current-month-label">${startY} - ${endY}</div>
+               <div class="cal-nav-btn" data-action="next-year"><svg class="ico" viewBox="0 0 24 24" style="stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg></div>
+             </div>
+             <div class="cal-year-grid">
+           `;
+          for (let i = startY; i <= endY; i++) {
+            html += `<div class="cal-year-cell ${i === y ? 'current' : ''}" data-year="${i}">${i}</div>`;
+          }
+          html += `</div>`;
+        }
+
+        container.innerHTML = html;
+
+        // Bind View Switch
+        const label = container.querySelector('.current-month-label');
+        if (label && viewMode === 'day') {
+          label.onclick = () => { viewMode = 'year'; renderCalendar(); };
+        } else if (label && viewMode === 'year') {
+          label.onclick = () => { viewMode = 'day'; renderCalendar(); };
+        }
+
+        // Bind Nav
+        container.querySelectorAll('.cal-nav-btn').forEach(b => {
+          b.onclick = (e) => {
+            e.stopPropagation();
+            const act = b.dataset.action;
+            if (act === 'prev') calDate.setMonth(calDate.getMonth() - 1);
+            if (act === 'next') calDate.setMonth(calDate.getMonth() + 1);
+            if (act === 'prev-year') calDate.setFullYear(calDate.getFullYear() - 15);
+            if (act === 'next-year') calDate.setFullYear(calDate.getFullYear() + 15);
+            renderCalendar();
+          };
+        });
+
+        // Bind Day Click
+        container.querySelectorAll('.cal-day:not(.empty)').forEach(d => {
+          d.onclick = (e) => {
+            e.stopPropagation();
+            handleDayClick(d.dataset.date);
+          };
+        });
+
+        // Bind Year Click
+        container.querySelectorAll('.cal-year-cell').forEach(y => {
+          y.onclick = (e) => {
+            e.stopPropagation();
+            calDate.setFullYear(parseInt(y.dataset.year));
+            viewMode = 'day';
+            renderCalendar();
+          };
+        });
+      }
+
+      function handleDayClick(iso) {
+        // presets.querySelectorAll('.rp2-chip').forEach(c => c.classList.remove('active')); // Clear presets
+
+        if (!selStart || (selStart && selEnd)) {
+          // Start new range
+          selStart = iso;
+          selEnd = null;
+        } else {
+          // Complete range
+          if (iso < selStart) {
+            selEnd = selStart;
+            selStart = iso;
+          } else {
+            selEnd = iso;
+          }
+        }
+
+        // Update inputs
+        rpStart.value = selStart || '';
+        rpEnd.value = selEnd || '';
+        renderCalendar();
+
+        // Clear preset highlight if custom
+        // But if it matches a preset, maybe highlight it? (Optional, skipping for now)
+        presets.querySelectorAll('.rp2-chip').forEach(c => c.classList.remove('active'));
+      }
+
       function openRP(target) {
         rangeTarget = target || 'orders';
         overlay.classList.add('open');
         overlay.setAttribute('aria-hidden', 'false');
 
-        // Highlight correct chip
         const chips = presets.querySelectorAll('.rp2-chip');
         chips.forEach(c => c.classList.remove('active'));
 
-        // Determine current filter state
         let currentK = '';
+        let sVal = '', eVal = '';
+
         if (rangeTarget === 'orders') {
-          // If custom dates that don't match a preset are used, uiDateFilter might be 'custom'
-          // We rely on uiDateFilter which we set on apply
           currentK = (uiDateFilter === 'all') ? 'clear' : uiDateFilter;
+          sVal = document.getElementById('startDate').value;
+          eVal = document.getElementById('endDate').value;
         } else {
-          // Metrics defaults to Today if not set
-          // We don't have a global var for metrics filter type, so we guess active
           const s = document.getElementById('metricsStartDate')?.value;
           const e = document.getElementById('metricsEndDate')?.value;
-          if (!s && !e) currentK = 'today'; // Default
-          else {
-            // Check if matches today
-            const { start: tS, end: tE } = computeDateRange('today');
-            if (s === tS && e === tE) currentK = 'today';
-            else currentK = 'custom';
-          }
+          const { start: tS, end: tE } = computeDateRange('today');
+          if (!s && !e) currentK = 'today';
+          else if (s === tS && e === tE) currentK = 'today';
+          else currentK = 'custom';
+
+          sVal = s; eVal = e;
         }
 
         if (currentK && currentK !== 'custom') {
           const active = presets.querySelector(`.rp2-chip[data-k="${currentK}"]`);
           if (active) active.classList.add('active');
         }
+
+        // Init Calendar State
+        selStart = sVal;
+        selEnd = eVal;
+        rpStart.value = sVal || '';
+        rpEnd.value = eVal || '';
+
+        // Reset View to Start Date or Today
+        if (sVal) calDate = new Date(sVal);
+        else calDate = new Date();
+
+        renderCalendar();
       }
+
       function closeRP() { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); }
 
       document.getElementById('dateBtn')?.addEventListener('click', () => openRP('orders'));
@@ -6082,37 +6522,29 @@
 
       presets?.addEventListener('click', (e) => {
         const b = e.target.closest('.rp2-chip'); if (!b) return;
-
-        // UI toggle
         presets.querySelectorAll('.rp2-chip').forEach(c => c.classList.remove('active'));
         b.classList.add('active');
 
         const { start, end } = computeDateRange(b.dataset.k, rpStart, rpEnd);
+        selStart = start;
+        selEnd = end;
         rpStart.value = start || '';
         rpEnd.value = end || '';
-      });
 
-      // Clear active chip if user manually edits inputs
-      [rpStart, rpEnd].forEach(el => {
-        el.addEventListener('input', () => {
-          presets.querySelectorAll('.rp2-chip').forEach(c => c.classList.remove('active'));
-        });
+        // Update Calendar View
+        if (start) calDate = new Date(start);
+        renderCalendar();
       });
 
       rpApply?.addEventListener('click', () => {
         const start = rpStart.value; const end = rpEnd.value;
-
-        // Determine what "k" is selected? 
-        // We need to save the filter type 'k' to uiDateFilter if it's orders
-        // Use the active chip to decide
         const activeChip = presets.querySelector('.rp2-chip.active');
         const k = activeChip ? activeChip.dataset.k : 'custom';
 
         if (rangeTarget === 'orders') {
           document.getElementById('startDate').value = start || '';
           document.getElementById('endDate').value = end || '';
-          uiDateFilter = k === 'clear' ? 'all' : k; // Save filter type
-
+          uiDateFilter = k === 'clear' ? 'all' : k;
           const dl = document.getElementById('dateLabel'); if (dl) dl.textContent = start || end ? labelFromRange(start, end) : 'All dates';
           currentOffset = 0; isLastPage = false; fetchPage(false);
         } else {
