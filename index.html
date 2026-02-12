@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Courier Management — Antigravity(v8)</title>
+    <title>Courier Management — Antigravity(v7)</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1499,7 +1499,8 @@
    ================================ */
         .metrics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
+            /* Locked 3 Cols as requested */
             gap: 12px;
             width: 100%;
         }
@@ -1599,7 +1600,8 @@
         }
 
         .metric .k {
-            font-size: 14px;
+            font-size: clamp(16px, 2vw, 24px);
+            /* Responsive scaling */
             font-weight: 600;
             color: var(--primary);
             line-height: 1.2;
@@ -1661,7 +1663,8 @@
         /* Responsive */
         @media (max-width: 550px) {
             .metrics-grid {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                /* Mobile: 2 Cols */
                 gap: 10px;
             }
 
@@ -4625,7 +4628,7 @@
         /* =========================
            CONFIG
            ========================= */
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw3GD-HAk5t_X7qb9xoaZE9FPk9POIok-ucpZNsqzf_mPin0l8Q-POzoM-R6iIkIGA6wg/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwcl-sKh_oJyBdxONjn_4QxxmfoURPtw34a6n6D416Itcnf-lecyCVE_4yZm7bWHI4pSQ/exec';
         const PAGE_LIMIT = 25;
 
         /* Row index mapping (kept from your original) */
@@ -6467,6 +6470,8 @@
         /* =========================
            MOBILE bottom sheet (inner card)
            ========================= */
+
+
         document.getElementById('mCards')?.addEventListener('click', (e) => {
             const card = e.target.closest('.mcard');
             if (!card) return;
@@ -6803,27 +6808,45 @@
         }
 
         /* Edit/Save button inside sheet */
-        document.getElementById('sheetEditBtn')?.addEventListener('click', () => {
-            if (!mobileDetail.open) return;
-            if (!mobileDetail.edit) { toggleEditMode(true); return; }
-            const d = mobileDetail.data;
-            const btn = document.getElementById('sheetEditBtn');
-            setBtnLoading(btn, true);
-            const courieredVia = document.getElementById('sheetCourieredVia').value;
-            const trackingNumber = s(document.getElementById('sheetTrackingNumber').value).trim();
-            const dispatchDate = document.getElementById('sheetDispatchDate').value;
-            const courierCharge = s(document.getElementById('sheetCourierCharge').value).trim();
-            const payment = document.getElementById('sheetPayment').value;
-            const trackingURL = trackingMap[courieredVia] || '';
-            const changes = { courieredVia, trackingNumber, dispatchDate, courierCharge, payment, trackingURL };
-            doJsonpEdit(d.sheetRow, changes, () => {
-                setBtnLoading(btn, false);
-                toggleEditMode(false);
-                _reallyCloseSheet();
-                // Silent update: Update the table row in background instead of full refresh
-                updateRowInTableDOM(d.sheetRow, changes);
-                showToast('Saved successfully', 'check-circle');
-            });
+        /* Edit/Save button inside sheet (Delegated) */
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('#sheetEditBtn');
+            if (!btn) return;
+            try {
+                if (!mobileDetail.open) return;
+                if (!mobileDetail.edit) { toggleEditMode(true); return; }
+
+                const btn = document.getElementById('sheetEditBtn');
+                setBtnLoading(btn, true);
+
+                // Safe helpers
+                const safeVal = (id) => {
+                    const el = document.getElementById(id);
+                    return el ? String(el.value || '').trim() : '';
+                };
+
+                const courieredVia = safeVal('sheetCourieredVia');
+                const trackingNumber = safeVal('sheetTrackingNumber');
+                const dispatchDate = safeVal('sheetDispatchDate');
+                const courierCharge = safeVal('sheetCourierCharge');
+                const payment = safeVal('sheetPayment');
+
+                const tMap = window.trackingMap || {};
+                const trackingURL = tMap[courieredVia] || ''; // Auto-link
+
+                const changes = { courieredVia, trackingNumber, dispatchDate, courierCharge, payment, trackingURL };
+
+                doJsonpEdit(mobileDetail.data.sheetRow, changes, () => {
+                    setBtnLoading(btn, false);
+                    toggleEditMode(false);
+                    _reallyCloseSheet();
+                    updateRowInTableDOM(mobileDetail.data.sheetRow, changes);
+                    showToast('Saved successfully', 'check-circle');
+                });
+            } catch (err) {
+                showToast('Save failed: ' + err.message, 'exclamation');
+                setBtnLoading(document.getElementById('sheetEditBtn'), false);
+            }
         });
 
         document.getElementById('sheetDeleteBtn')?.addEventListener('click', () => {
@@ -6843,7 +6866,7 @@
         });
         document.getElementById('confirmSave')?.addEventListener('click', () => {
             document.getElementById('confirmOverlay').classList.remove('open');
-            document.getElementById('sheetEditBtn')?.click();
+            document.getElementById('sheetEditBtn')?.click(); // Triggers delegated listener
         });
 
         /* Inform via WhatsApp from table */
@@ -7684,7 +7707,13 @@
             document.body.classList.toggle('insights-mode', key === 'insights');
             document.querySelectorAll('#mobileNav .seg').forEach(b => b.classList.toggle('active', b.dataset.target === key));
             if (isMobile() && key === 'create') {
-                setTimeout(() => document.getElementById('recipientName')?.focus(), 150);
+                // Only auto-focus if we aren't already editing a field (prevents focus stealing on resize/keyboard open)
+                const active = document.activeElement;
+                const formEl = document.getElementById('courierForm');
+                const isEditing = formEl && formEl.contains(active);
+                if (!isEditing) {
+                    setTimeout(() => document.getElementById('recipientName')?.focus(), 150);
+                }
             }
         }
         function setupMobileNav({ initial = false } = {}) {
@@ -7723,9 +7752,11 @@
             renderTableSkeleton();
             if (isMobile()) mobileCardSkeleton();
 
-            return fetchPage(false).then(() => {
-                fetchMetrics();
-            });
+            // Parallel Fetch for speed
+            return Promise.all([
+                fetchPage(false),
+                fetchMetrics()
+            ]);
         }
 
         /* =========================
