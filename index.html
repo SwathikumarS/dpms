@@ -4053,12 +4053,12 @@
                             <label>Tracking URL</label>
                             <div style="display:flex; gap:8px; align-items:center;">
                                 <input type="text" id="sheetTrackingURL" class="sheet-input"
-                                    placeholder="No link available" readonly style="flex:1;">
+                                    placeholder="No link available" readonly style="display:none;">
                                 <a id="sheetTrackingLink" href="#" target="_blank" class="btn"
-                                    style="display:none; padding: 6px 12px; height: 38px; align-items: center; gap: 6px; text-decoration: none;">
+                                    style="display:none; padding: 6px 12px; height: 38px; align-items: center; gap: 6px; text-decoration: none; flex: 1; justify-content: center;">
                                     <svg class="ico">
                                         <use href="#i-link" />
-                                    </svg> Open
+                                    </svg> Open Link
                                 </a>
                             </div>
                         </div>
@@ -4069,7 +4069,8 @@
                             <label><svg class="ico16">
                                     <use href="#i-calendar" />
                                 </svg> Dispatch Date</label>
-                            <input type="date" id="sheetDispatchDate" class="sheet-input" readonly>
+                            <input type="text" id="sheetDispatchDate" class="sheet-input" readonly
+                                placeholder="Select Date">
                         </div>
                         <div class="sheet-field">
                             <label><svg class="ico16">
@@ -5954,9 +5955,9 @@
 
                 // Use a small timeout to ensure DOM updates and scroll to the table section
                 setTimeout(() => {
-                    const target = document.getElementById('ordersWrap');
+                    const target = document.getElementById('topControls'); // Target the filter bar/search bar
                     if (target) {
-                        const offset = 80; // Buffer for sticky header
+                        const offset = 10; // Small buffer
                         const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
                         window.scrollTo({ top, behavior: 'smooth' });
                     }
@@ -7281,6 +7282,15 @@
                 // Update inputs
                 rpStart.value = selStart || '';
                 rpEnd.value = selEnd || '';
+
+                // If Single Mode, Auto-Apply and Close on selection
+                if (rangeTarget === 'mobileSheet') {
+                    selEnd = selStart; // Force single day range
+                    rpEnd.value = selStart;
+                    rpApply.click(); // Auto-apply
+                    return;
+                }
+
                 renderCalendar();
 
                 // Clear preset highlight if custom
@@ -7293,6 +7303,14 @@
                 overlay.classList.add('open');
                 overlay.setAttribute('aria-hidden', 'false');
 
+                overlay.setAttribute('aria-hidden', 'false');
+
+                // Toggle Presets Visibility
+                const presetsArea = document.getElementById('rpPresets');
+                if (presetsArea) {
+                    presetsArea.style.display = (rangeTarget === 'mobileSheet') ? 'none' : '';
+                }
+
                 const chips = presets.querySelectorAll('.rp2-chip');
                 chips.forEach(c => c.classList.remove('active'));
 
@@ -7303,6 +7321,11 @@
                     currentK = (uiDateFilter === 'all') ? 'clear' : uiDateFilter;
                     sVal = document.getElementById('startDate').value;
                     eVal = document.getElementById('endDate').value;
+                } else if (rangeTarget === 'mobileSheet') {
+                    // Single Date Mode
+                    const s = document.getElementById('sheetDispatchDate').value; // YYYY-MM-DD
+                    if (s) { currentK = 'custom'; sVal = s; eVal = s; }
+                    else { currentK = 'today'; const { start } = computeDateRange('today'); sVal = start; eVal = start; }
                 } else {
                     const s = document.getElementById('metricsStartDate')?.value;
                     const e = document.getElementById('metricsEndDate')?.value;
@@ -7367,14 +7390,23 @@
                     uiDateFilter = k === 'clear' ? 'all' : k;
                     const dl = document.getElementById('dateLabel'); if (dl) dl.textContent = start || end ? labelFromRange(start, end) : 'All dates';
                     currentOffset = 0; isLastPage = false; fetchPage(false);
-                } else {
+                } else if (rangeTarget === 'metrics') {
                     document.getElementById('metricsStartDate').value = start || '';
                     document.getElementById('metricsEndDate').value = end || '';
                     const ml = document.getElementById('metricsDateLabel'); if (ml) ml.textContent = start || end ? labelFromRange(start, end) : 'Today';
                     fetchMetrics();
+                } else if (rangeTarget === 'mobileSheet') {
+                    document.getElementById('sheetDispatchDate').value = start || '';
                 }
                 closeRP();
             });
+
+            // Bind Mobile Sheet Date Picker
+            document.getElementById('sheetDispatchDate')?.addEventListener('click', () => {
+                if (document.getElementById('sheetDispatchDate').disabled) return;
+                openRP('mobileSheet');
+            });
+
         })();
 
         /* =========================
