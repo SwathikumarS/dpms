@@ -4026,6 +4026,7 @@
                     <div class="section-title"><svg class="ico">
                             <use href="#i-package" />
                         </svg> Shipping</div>
+                    <!-- Row 1: Courier + Tracking Number -->
                     <div class="sheet-row">
                         <div class="sheet-field">
                             <label><svg class="ico16">
@@ -4035,8 +4036,9 @@
                         </div>
                         <div class="sheet-field">
                             <label>Tracking Number</label>
-                            <div class="input-with-btn" style="display:flex; gap:8px; flex-wrap:wrap;">
-                                <input id="sheetTrackingNumber" placeholder="#..." disabled style="flex:1">
+                            <div class="input-with-btn" style="display:flex; gap:6px; flex-wrap:nowrap;">
+                                <input id="sheetTrackingNumber" placeholder="#..." disabled
+                                    style="flex:1; min-width:0;">
                                 <button class="icon-btn" id="sheetCopyBtn" title="Copy tracking"><svg class="ico">
                                         <use href="#i-clipboard" />
                                     </svg></button>
@@ -4048,23 +4050,19 @@
                         </div>
                     </div>
 
+                    <!-- Row 2: Tracking URL + Dispatch Date -->
                     <div class="sheet-row">
-                        <div class="sheet-field readonly">
+                        <div class="sheet-field">
                             <label>Tracking URL</label>
-                            <div style="display:flex; gap:8px; align-items:center;">
-                                <input type="text" id="sheetTrackingURL" class="sheet-input"
-                                    placeholder="No link available" readonly style="display:none;">
+                            <div style="display:flex; gap:8px; align-items:center; min-height:40px;">
                                 <a id="sheetTrackingLink" href="#" target="_blank" class="btn"
-                                    style="display:none; padding: 6px 12px; height: 38px; align-items: center; gap: 6px; text-decoration: none; flex: 1; justify-content: center;">
+                                    style="display:flex; padding: 6px 12px; height: 38px; align-items: center; gap: 6px; text-decoration: none; flex: 1; justify-content: center;">
                                     <svg class="ico">
                                         <use href="#i-link" />
-                                    </svg> Open Link
+                                    </svg> <span id="sheetTrackingLinkText">Open Link</span>
                                 </a>
                             </div>
                         </div>
-
-
-
                         <div class="sheet-field">
                             <label><svg class="ico16">
                                     <use href="#i-calendar" />
@@ -4072,6 +4070,10 @@
                             <input type="text" id="sheetDispatchDate" class="sheet-input" readonly
                                 placeholder="Select Date">
                         </div>
+                    </div>
+
+                    <!-- Row 3: Courier Charge + Payment Status -->
+                    <div class="sheet-row">
                         <div class="sheet-field">
                             <label><svg class="ico16">
                                     <use href="#i-rupee-circle" />
@@ -4089,288 +4091,287 @@
                             </select>
                         </div>
                     </div>
-                </div>
 
-                <div class="sheet-actions">
-                    <button class="btn" id="sheetEditBtn">
-                        <svg class="ico">
-                            <use href="#i-pencil" />
-                        </svg><span class="btn-text">Edit</span>
-                    </button>
-                    <button class="btn" id="sheetDeleteBtn">
-                        <svg class="ico">
-                            <use href="#i-trash" />
-                        </svg> Delete
-                    </button>
+                    <div class="sheet-actions">
+                        <button class="btn" id="sheetEditBtn">
+                            <svg class="ico">
+                                <use href="#i-pencil" />
+                            </svg><span class="btn-text">Edit</span>
+                        </button>
+                        <button class="btn" id="sheetDeleteBtn">
+                            <svg class="ico">
+                                <use href="#i-trash" />
+                            </svg> Delete
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Scanner Modal -->
-    <div id="scanOverlay" class="no-print" aria-hidden="true">
-        <div class="scan-wrap">
-            <div class="scan-head">
-                <strong>Scan barcode</strong>
-                <div style="display:flex;gap:8px;align-items:center">
-                    <!-- Flash toggle (default OFF) -->
-                    <label class="pill pill-sm" id="torchPill" style="display:none;">
-                        <input type="checkbox" id="scanTorchToggle" aria-label="Toggle flash">
-                        <span class="pill-ui">
-                            <span class="cbx" aria-hidden="true"><svg class="tick">
-                                    <use href="#i-check" />
-                                </svg></span>
-                            Flash
-                        </span>
-                    </label>
-                    <button class="sheet-close" id="scanClose"><svg class="ico">
+        <!-- Scanner Modal -->
+        <div id="scanOverlay" class="no-print" aria-hidden="true">
+            <div class="scan-wrap">
+                <div class="scan-head">
+                    <strong>Scan barcode</strong>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <!-- Flash toggle (default OFF) -->
+                        <label class="pill pill-sm" id="torchPill" style="display:none;">
+                            <input type="checkbox" id="scanTorchToggle" aria-label="Toggle flash">
+                            <span class="pill-ui">
+                                <span class="cbx" aria-hidden="true"><svg class="tick">
+                                        <use href="#i-check" />
+                                    </svg></span>
+                                Flash
+                            </span>
+                        </label>
+                        <button class="sheet-close" id="scanClose"><svg class="ico">
+                                <use href="#i-x" />
+                            </svg></button>
+                    </div>
+                </div>
+
+                <div id="scanViewport"></div>
+                <div class="scan-hint">Center the barcode inside the frame</div>
+            </div>
+        </div>
+
+        <!-- Date Range Picker -->
+        <div id="rangePickerOverlay" class="no-print" aria-hidden="true">
+            <div class="rp-modal">
+                <div class="rp-head">
+                    <strong>Select date range</strong>
+                    <button class="sheet-close" id="rpClose"><svg class="ico">
                             <use href="#i-x" />
                         </svg></button>
                 </div>
-            </div>
 
-            <div id="scanViewport"></div>
-            <div class="scan-hint">Center the barcode inside the frame</div>
-        </div>
-    </div>
+                <div id="rpPresets" class="rp-presets">
+                    <button class="rp2-chip" data-k="today">Today</button>
+                    <button class="rp2-chip" data-k="yesterday">Yesterday</button>
+                    <button class="rp2-chip" data-k="thisWeek">This Week</button>
+                    <button class="rp2-chip" data-k="thisMonth">This Month</button>
+                    <button class="rp2-chip" data-k="clear">Clear All</button>
+                </div>
 
-    <!-- Date Range Picker -->
-    <div id="rangePickerOverlay" class="no-print" aria-hidden="true">
-        <div class="rp-modal">
-            <div class="rp-head">
-                <strong>Select date range</strong>
-                <button class="sheet-close" id="rpClose"><svg class="ico">
-                        <use href="#i-x" />
-                    </svg></button>
-            </div>
+                <div class="rp-body" style="padding:0; display:block;">
+                    <div id="jsCalendar"></div>
+                    <!-- Hidden inputs to store value for existing logic -->
+                    <input type="hidden" id="rpStart">
+                    <input type="hidden" id="rpEnd">
+                </div>
 
-            <div id="rpPresets" class="rp-presets">
-                <button class="rp2-chip" data-k="today">Today</button>
-                <button class="rp2-chip" data-k="yesterday">Yesterday</button>
-                <button class="rp2-chip" data-k="thisWeek">This Week</button>
-                <button class="rp2-chip" data-k="thisMonth">This Month</button>
-                <button class="rp2-chip" data-k="clear">Clear All</button>
-            </div>
+                <style>
+                    /* Modern JS Calendar */
+                    #jsCalendar {
+                        padding: 10px 16px 16px;
+                        user-select: none;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        /* Center Calendar */
+                        width: 100%;
+                    }
 
-            <div class="rp-body" style="padding:0; display:block;">
-                <div id="jsCalendar"></div>
-                <!-- Hidden inputs to store value for existing logic -->
-                <input type="hidden" id="rpStart">
-                <input type="hidden" id="rpEnd">
-            </div>
+                    .cal-header {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 14px;
+                        color: var(--ink);
+                        font-weight: 700;
+                        font-size: 14px;
+                        /* Medium Header */
+                        width: 100%;
+                        max-width: 320px;
+                        /* Constrain width */
+                        margin: 0 auto;
+                        /* Force Center */
+                    }
 
-            <style>
-                /* Modern JS Calendar */
-                #jsCalendar {
-                    padding: 10px 16px 16px;
-                    user-select: none;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    /* Center Calendar */
-                    width: 100%;
-                }
+                    .cal-nav-btn {
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        border: 1px solid var(--border);
+                        background: var(--paper);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        cursor: pointer;
+                        color: var(--ink);
+                        transition: .2s;
+                        box-shadow: var(--shadow-sm);
+                    }
 
-                .cal-header {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                    margin-bottom: 14px;
-                    color: var(--ink);
-                    font-weight: 700;
-                    font-size: 14px;
-                    /* Medium Header */
-                    width: 100%;
-                    max-width: 320px;
-                    /* Constrain width */
-                    margin: 0 auto;
-                    /* Force Center */
-                }
+                    .cal-nav-btn svg {
+                        width: 18px;
+                        height: 18px;
+                        stroke-width: 2.5;
+                    }
 
-                .cal-nav-btn {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
-                    border: 1px solid var(--border);
-                    background: var(--paper);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    cursor: pointer;
-                    color: var(--ink);
-                    transition: .2s;
-                    box-shadow: var(--shadow-sm);
-                }
+                    .cal-nav-btn:hover {
+                        background: var(--surface);
+                        color: var(--primary);
+                        border-color: var(--primary);
+                    }
 
-                .cal-nav-btn svg {
-                    width: 18px;
-                    height: 18px;
-                    stroke-width: 2.5;
-                }
+                    .cal-grid {
+                        display: grid;
+                        grid-template-columns: repeat(7, 1fr);
+                        column-gap: 4px;
+                        row-gap: 6px;
+                        text-align: center;
+                        width: 100%;
+                        max-width: 320px;
+                        /* Constrain width */
+                        margin: 0 auto;
+                        /* Force Center */
+                    }
 
-                .cal-nav-btn:hover {
-                    background: var(--surface);
-                    color: var(--primary);
-                    border-color: var(--primary);
-                }
+                    .cal-head-day {
+                        font-size: 11px;
+                        color: var(--muted);
+                        font-weight: 600;
+                        padding-bottom: 6px;
+                    }
 
-                .cal-grid {
-                    display: grid;
-                    grid-template-columns: repeat(7, 1fr);
-                    column-gap: 4px;
-                    row-gap: 6px;
-                    text-align: center;
-                    width: 100%;
-                    max-width: 320px;
-                    /* Constrain width */
-                    margin: 0 auto;
-                    /* Force Center */
-                }
+                    .cal-day {
+                        width: 38px;
+                        /* Medium Size (down from 44, up from original) */
+                        height: 38px;
+                        margin: 0 auto;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 13.5px;
+                        font-weight: 600;
+                        border-radius: 50%;
+                        cursor: pointer;
+                        transition: .2s;
+                        position: relative;
+                        color: var(--ink);
+                    }
 
-                .cal-head-day {
-                    font-size: 11px;
-                    color: var(--muted);
-                    font-weight: 600;
-                    padding-bottom: 6px;
-                }
+                    .cal-day:hover:not(.empty) {
+                        background: var(--surface);
+                        color: var(--primary);
+                    }
 
-                .cal-day {
-                    width: 38px;
-                    /* Medium Size (down from 44, up from original) */
-                    height: 38px;
-                    margin: 0 auto;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    font-size: 13.5px;
-                    font-weight: 600;
-                    border-radius: 50%;
-                    cursor: pointer;
-                    transition: .2s;
-                    position: relative;
-                    color: var(--ink);
-                }
+                    .cal-day.selected {
+                        background: var(--primary);
+                        color: #fff;
+                        font-weight: 700;
+                        box-shadow: 0 4px 10px var(--primary-light);
+                    }
 
-                .cal-day:hover:not(.empty) {
-                    background: var(--surface);
-                    color: var(--primary);
-                }
+                    /* Range Connectors */
+                    .cal-day.range-start {
+                        border-radius: 50% 0 0 50%;
+                    }
 
-                .cal-day.selected {
-                    background: var(--primary);
-                    color: #fff;
-                    font-weight: 700;
-                    box-shadow: 0 4px 10px var(--primary-light);
-                }
+                    .cal-day.range-end {
+                        border-radius: 0 50% 50% 0;
+                    }
 
-                /* Range Connectors */
-                .cal-day.range-start {
-                    border-radius: 50% 0 0 50%;
-                }
+                    .cal-day.in-range {
+                        background: var(--primary-light-bg);
+                        color: var(--primary);
+                        border-radius: 0;
+                        width: 100%;
+                    }
 
-                .cal-day.range-end {
-                    border-radius: 0 50% 50% 0;
-                }
+                    /* Single day overlap fix */
+                    .cal-day.selected.range-start.range-end {
+                        border-radius: 50%;
+                        width: 38px;
+                    }
 
-                .cal-day.in-range {
-                    background: var(--primary-light-bg);
-                    color: var(--primary);
-                    border-radius: 0;
-                    width: 100%;
-                }
+                    .cal-day.today {
+                        font-weight: 800;
+                        color: var(--primary);
+                    }
 
-                /* Single day overlap fix */
-                .cal-day.selected.range-start.range-end {
-                    border-radius: 50%;
-                    width: 38px;
-                }
+                    .cal-day.empty {
+                        cursor: default;
+                        pointer-events: none;
+                    }
 
-                .cal-day.today {
-                    font-weight: 800;
-                    color: var(--primary);
-                }
+                    .current-month-label {
+                        cursor: pointer;
+                        padding: 4px 12px;
+                        border-radius: 20px;
+                        transition: .2s;
+                    }
 
-                .cal-day.empty {
-                    cursor: default;
-                    pointer-events: none;
-                }
+                    .current-month-label:hover {
+                        background: var(--surface);
+                        color: var(--primary);
+                    }
 
-                .current-month-label {
-                    cursor: pointer;
-                    padding: 4px 12px;
-                    border-radius: 20px;
-                    transition: .2s;
-                }
+                    /* Year Picker Grid */
+                    .cal-year-grid {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 12px;
+                        padding: 10px;
+                        width: 100%;
+                        max-width: 320px;
+                        margin: 0 auto;
+                        /* Force Center */
+                    }
 
-                .current-month-label:hover {
-                    background: var(--surface);
-                    color: var(--primary);
-                }
+                    .cal-year-cell {
+                        padding: 14px;
+                        text-align: center;
+                        border-radius: 12px;
+                        border: 1px solid var(--border);
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: .2s;
+                        font-size: 14px;
+                    }
 
-                /* Year Picker Grid */
-                .cal-year-grid {
-                    display: grid;
-                    grid-template-columns: repeat(3, 1fr);
-                    gap: 12px;
-                    padding: 10px;
-                    width: 100%;
-                    max-width: 320px;
-                    margin: 0 auto;
-                    /* Force Center */
-                }
+                    .cal-year-cell:hover {
+                        border-color: var(--primary);
+                        color: var(--primary);
+                        background: var(--surface);
+                    }
 
-                .cal-year-cell {
-                    padding: 14px;
-                    text-align: center;
-                    border-radius: 12px;
-                    border: 1px solid var(--border);
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: .2s;
-                    font-size: 14px;
-                }
+                    .cal-year-cell.current {
+                        background: var(--primary);
+                        color: #fff;
+                        border-color: var(--primary);
+                    }
 
-                .cal-year-cell:hover {
-                    border-color: var(--primary);
-                    color: var(--primary);
-                    background: var(--surface);
-                }
+                    /* Center Presets & Make Larger */
+                    .rp-presets {
+                        justify-content: center !important;
+                        /* Force Center */
+                        gap: 8px;
+                        /* Spacing */
+                        padding: 12px 16px 4px;
+                    }
 
-                .cal-year-cell.current {
-                    background: var(--primary);
-                    color: #fff;
-                    border-color: var(--primary);
-                }
+                    .rp2-chip {
+                        font-size: 13px !important;
+                        /* Larger Font */
+                        padding: 8px 14px !important;
+                        /* Larger Touch Target */
+                        border-radius: 20px !important;
+                    }
+                </style>
 
-                /* Center Presets & Make Larger */
-                .rp-presets {
-                    justify-content: center !important;
-                    /* Force Center */
-                    gap: 8px;
-                    /* Spacing */
-                    padding: 12px 16px 4px;
-                }
-
-                .rp2-chip {
-                    font-size: 13px !important;
-                    /* Larger Font */
-                    padding: 8px 14px !important;
-                    /* Larger Touch Target */
-                    border-radius: 20px !important;
-                }
-            </style>
-
-            <div class="cal-actions"
-                style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:10px;">
-                <button class="btn" id="rpCancel"><svg class="ico">
-                        <use href="#i-x" />
-                    </svg> Cancel</button>
-                <button class="btn btn-primary" id="rpApply"><svg class="ico">
-                        <use href="#i-check-square" />
-                    </svg> Apply</button>
+                <div class="cal-actions"
+                    style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end; border-top:1px solid var(--border); padding-top:10px;">
+                    <button class="btn" id="rpCancel"><svg class="ico">
+                            <use href="#i-x" />
+                        </svg> Cancel</button>
+                    <button class="btn btn-primary" id="rpApply"><svg class="ico">
+                            <use href="#i-check-square" />
+                        </svg> Apply</button>
+                </div>
             </div>
         </div>
-    </div>
     </div>
     </div>
 
@@ -6011,6 +6012,33 @@
             changes[field] = value; tr.dataset.pendingChanges = JSON.stringify(changes);
             tr.classList.add('has-pending-changes');
         }
+
+        // Helper to update Tracking Link in Mobile Sheet
+        function updateSheetTrackingLink(courierName, directUrl) {
+            const url = (trackingMap && trackingMap[courierName]) || directUrl || '';
+            const link = document.getElementById('sheetTrackingLink');
+            const linkText = document.getElementById('sheetTrackingLinkText');
+
+            if (link) {
+                link.style.display = 'flex'; // Always visible
+                if (url) {
+                    link.href = url;
+                    link.style.opacity = '1';
+                    link.style.pointerEvents = 'auto';
+                    link.style.background = 'var(--surface)';
+                    link.style.color = 'var(--primary)';
+                    if (linkText) linkText.textContent = 'Open Link';
+                } else {
+                    link.removeAttribute('href');
+                    link.style.opacity = '0.6';
+                    link.style.pointerEvents = 'none';
+                    link.style.background = 'var(--bg)';
+                    link.style.color = 'var(--ink-light)';
+                    if (linkText) linkText.textContent = 'No URL Found';
+                }
+            }
+        }
+
         function onCourierChange(dd) {
             const tr = dd.closest('tr');
             if (!tr) return;
@@ -6618,30 +6646,7 @@
             const cc = document.getElementById('sheetCourierCharge'); if (cc) cc.value = d.courierCharge || '';
             const sp = document.getElementById('sheetPayment'); if (sp) { sp.value = d.payment || 'Unpaid'; sp.dispatchEvent(new Event('change')); }
 
-            const url = trackingMap[d.courieredVia] || d.trackingURL || '';
-            const link = document.getElementById('sheetTrackingLink');
-            const urlInput = document.getElementById('sheetTrackingURL');
-
-            if (url) {
-                if (link) {
-                    // CLEANUP: Remove any rogue siblings that might have been added
-                    const parent = link.parentNode;
-                    if (parent) {
-                        // Keep only the input and the link
-                        Array.from(parent.children).forEach(child => {
-                            if (child !== link && child !== urlInput) {
-                                child.remove();
-                            }
-                        });
-                    }
-                    link.href = url;
-                    link.style.display = 'flex';
-                }
-                if (urlInput) { urlInput.value = url; }
-            } else {
-                if (link) { link.style.display = 'none'; link.href = '#'; }
-                if (urlInput) { urlInput.value = ''; }
-            }
+            updateSheetTrackingLink(d.courieredVia, d.trackingURL);
 
             const makeMsg = () => [
                 `Dear ${d.name || ''},`,
@@ -6766,26 +6771,14 @@
                 if (el) {
                     el.disabled = !on;
                     // Also toggle readonly for inputs to ensure keyboards trigger
-                    if (on) el.removeAttribute('readonly');
-                    else el.setAttribute('readonly', 'true');
+                    // BUT keep Dispatch Date readonly so it triggers the picker
+                    if (id !== 'sheetDispatchDate') {
+                        if (on) el.removeAttribute('readonly');
+                        else el.setAttribute('readonly', 'true');
+                    }
                 }
             });
 
-            // Handle Tracking URL Input Visibility
-            const trkInput = document.getElementById('sheetTrackingURL');
-            if (trkInput) {
-                trkInput.disabled = !on;
-                if (on) {
-                    trkInput.style.display = 'block'; // Always show in edit mode
-                } else {
-                    // Re-apply visibility rule (hide if value exists, show if empty)
-                    if (trkInput.value.trim().length > 0 && document.getElementById('sheetTrackingLink').style.display !== 'none') {
-                        trkInput.style.display = 'none';
-                    } else {
-                        trkInput.style.display = 'block';
-                    }
-                }
-            }
 
             const scanBtn = document.getElementById('sheetScanBtn');
             const copyBtn = document.getElementById('sheetCopyBtn');
@@ -7913,6 +7906,11 @@
                         }
                     });
                 }
+            });
+
+            // Wire up Sheet Tracking Link update
+            document.getElementById('sheetCourieredVia')?.addEventListener('change', function () {
+                updateSheetTrackingLink(this.value);
             });
         }
         document.addEventListener('DOMContentLoaded', init);
